@@ -3,7 +3,7 @@ DEBUG = -g -O0 -Wall -Wshadow -Wunreachable-code -Wredundant-decls -Wmissing-dec
 CFLAGS = $(DEBUG)
 LDFLAGS = -pthread
 
-SOURCES = rockem_client.c rockem_server.c
+SOURCES = irc_client.c irc_server.c
 OBJECTS = $(SOURCES:.c=.o)
 TARGETS = $(OBJECTS:.o=)
 .PHONY = clean revision_control test clean_tests
@@ -21,20 +21,8 @@ test: all
 	./create_random_files.bash && \
 	./tests_local.sh
 
-TAR_FILE = $(LOGNAME)_crypt.tar.gz
-tar:
-	rm -f $(TAR_FILE)
-	tar cvaf $(TAR_FILE) *.[ch] Makefile
-	tar tvaf $(TAR_FILE)
-
-revision_control:
-	git add .
-	printf "Commit message: " && \
-	read MSG && \
-	git commit -m "$$MSG"
-
 clean:
-	rm -f $(OBJECTS) $(TARGETS) *.out *.o rockem_client rockem_server test/.create_files_done
+	rm -f $(OBJECTS) $(TARGETS) *.out *.o test/.create_files_done
 	find . -name '*.dat' -exec rm "{}" \;
 
 clean_tests:

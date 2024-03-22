@@ -25,7 +25,7 @@
 
 # IRC plan
 
-- [ ] RFC Document
+- [x] RFC added to repository
 - [ ] Server Process
 - [ ] Client can connect to a server
 - [ ] Client can create a room
