@@ -3,7 +3,7 @@ DEBUG = -g -O0 -Wall -Wshadow -Wunreachable-code -Wredundant-decls -Wmissing-dec
 CFLAGS = $(DEBUG)
 LDFLAGS = -pthread
 
-SOURCES = irc_client.c irc_server.c
+SOURCES = learn_irc_c.c learn_irc_s.c
 OBJECTS = $(SOURCES:.c=.o)
 TARGETS = $(OBJECTS:.o=)
 .PHONY = clean revision_control test clean_tests

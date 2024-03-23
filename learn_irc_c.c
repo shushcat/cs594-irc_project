@@ -1,60 +1,56 @@
-// rchaney@pdx.edu & johnb@pdx.edu
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
+// TODO Audit these.
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <netdb.h>
+#include <netinet/in.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/uio.h>
 #include <unistd.h>
-#include <pthread.h>
 
-#include "rockem_hdr.h"
+#include "learn_irc.h"
 
-#define MAX_ADR_LEN 50
-
-static unsigned short is_verbose = 0;
-static unsigned sleep_flag = 0;
-
-static char ip_addr[MAX_ADR_LEN] = "131.252.208.23";
-static short ip_port = DEFAULT_SERV_PORT;
-
-int get_socket(char* , int);
+int get_socket(char*, int);
 void get_file(char*);
 void put_file(char*);
 void* thread_get(void*);
 void* thread_put(void*);
 void list_dir(void);
 
+static unsigned short is_verbose = 0;
+static unsigned sleep_flag = 0;
+static char ip_addr[MAX_ADR_LEN] = DEFAULT_SERV_IP;
+static short ip_port = DEFAULT_SERV_PORT;
+
 int main(int argc, char* argv[]) {
 	cmd_t cmd;
-    int opt;
-    int i;
+	int opt = 0;
+	int i = 0;
 	pthread_t* threads = NULL;
 	pthread_attr_t attr;
 
-    memset(&cmd, 0, sizeof(cmd_t));
-    while((opt = getopt(argc, argv, CLIENT_OPTIONS)) != -1) {
-        switch(opt) {
-        case 'i':
-			if(strlen(optarg) > MAX_ADR_LEN - 1) {
-				fprintf(stderr, "%s isn't an IP address.\n", optarg);
+	memset(&cmd, 0, sizeof(cmd_t));
+	while((opt = getopt(argc, argv, CLIENT_OPTIONS)) != -1) {
+		switch(opt) {
+		case 'i':
+			if(strlen(optarg) > MAX_ADR_LEN -1) {
+				fprintf(stderr, "%s isn't an IP address. \n", optarg);
 				exit(EXIT_FAILURE);
 			}
 			strcpy(ip_addr, optarg);
 			ip_addr[strlen(optarg)] = '\0';
-            break;
-        case 'p':
+			break;
+		case 'p':
 			ip_port = (short) atoi(optarg);
 			if(ip_port == 0) {
-				fprintf(stderr, "atoi: \"%s\" just isn't a very good port number.\n", optarg);
+				fprintf(stderr, "atoi: \"%s\" not set", optarg);
 			}
-            break;
-        case 'c':
+			break;
+		case 'c':
 			strncpy(cmd.cmd, optarg, CMD_LEN - 1);
 			cmd.cmd[strlen(cmd.cmd)] = '\0';
 			if((strncmp(cmd.cmd, CMD_PUT, strlen(CMD_PUT)) != 0) &&
@@ -63,38 +59,24 @@ int main(int argc, char* argv[]) {
 				fprintf(stderr, "%s is an invalid command.\n", cmd.cmd);
 				exit(EXIT_FAILURE);
 			}
-            break;
-        case 'v':
-            is_verbose++;
-            break;
-        case 'u':
+			break;
+		case 'v':
+			is_verbose++;
+			break;
+		case 'u':
 			sleep_flag += 1000;
 			break;
-        case 'h':
-            fprintf(stderr, "%s ...\n\tOptions: %s\n", argv[0], CLIENT_OPTIONS);
-            fprintf(stderr, "\t-i str\t\tIPv4 address of the server (default %s)\n", ip_addr);
-            fprintf(stderr, "\t-p #\t\tport on which the server will listen (default %hd)\n",
-					DEFAULT_SERV_PORT);
-            fprintf(stderr, "\t-c str\t\tcommand to run (one of %s, %s, or %s)\n",
-					CMD_GET, CMD_PUT, CMD_DIR);
-            fprintf(stderr,"\t-u\t\tnumber of thousands of microseconds the client will "
-					"sleep between read/write calls (default %d)\n", 0);
-            fprintf(stderr, "\t-v\t\tenable verbose output. "
-					"Can occur more than once to increase output\n");
-            fprintf(stderr, "\t-h\t\tshow this rather lame help message\n");
-            exit(EXIT_SUCCESS);
-            break;
-        default:
-            fprintf(stderr, "*** Oops, something strange happened <%s> ***\n", argv[0]);
-            break;
-        }
-    }
-
-	// TODO Copy over cmd.name after done parsing options, or maybe don't use it?
-
-    if(is_verbose) {
-        fprintf(stderr, "Command to server: <%s> %d\n", cmd.cmd, __LINE__);
+		case 'h':
+			fprintf(stdout, "Help message!\n");
+			exit(EXIT_SUCCESS);
+			break;
+		default:
+			fprintf(stderr, "Parsing failure for <%s>.\n", argv[0]);
+			break;
+		}
 	}
+
+    if(is_verbose) fprintf(stderr, "Command to server: <%s> %d\n", cmd.cmd, __LINE__);
 
 	// Setup the attributes structure to allow starting detached threads.
 	pthread_attr_init(&attr);
