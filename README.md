@@ -4,8 +4,11 @@
 # Plan
 
 - [x] RFC added to repository
-- [ ] Setup client & server skeletons
-- [ ] Server Process
+- [x] Setup client & server skeletons
+- [x] Skim RFC
+- [ ] Basic diagram
+- [ ] Associate commands with below functionality
+- [ ] Server process
 - [ ] Client can connect to a server
 - [ ] Client can create a room
 - [ ] Client can list all rooms
@@ -20,10 +23,11 @@
 - [ ] Server can disconnect from clients
 - [ ] Server can gracefully handle client crashes
 - [ ] Client can gracefully handle server crashes
-- [ ] Programming Style
+- [ ] Programming style
 - [ ] Private or Ephemeral Messaging
 - [ ] Secure messaging
 - [ ] File transfer
+	- DCC transfers?
 - [ ] Cloud connected server
 
 ## Questions
@@ -39,3 +43,33 @@ How would these three work?
 - [ ] Crawl through those `valgrind` gates
 	- Detached threads are reported as possibly leaky.
 
+# RFC
+
+client
+	real name :client host
+	username :client host
+	?operator
+	len(nick) <= 9
+
+channels
+	len(name) <= 200
+	name: ~{ \s Ctrl-G ,}
+	name[0] :: '&' | '#'
+		'#': local join
+		'&': ____
+
+messages
+len(msg) <= 512
+?timeout
+<prefix> command parameter1 <parameter2, ... , parameter15>
+	prefix:
+		`:prefix`
+		~prefix: origin::sender
+		(send(self) :client): ~prefix
+		~prefix(server)|prefix(other link): ignore
+	command:
+		IRC command | 3 digit ASCII number
+
+(message: server): numeric reply :: sender, 3 digits, target
+
+ports 6660--6669 & 7000
