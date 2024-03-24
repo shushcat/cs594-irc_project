@@ -27,7 +27,7 @@ typedef struct msg_s {
 #define CMD_PUT "put"
 #define CMD_DIR "dir"
 
-#define CLIENT_OPTIONS "i:p:c:uvh"
+#define CLIENT_OPTIONS "i:p:h"
 
 #define SERVER_OPTIONS "p:uvh"
 

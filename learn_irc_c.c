@@ -20,7 +20,7 @@ void put_file(char*);
 void list_dir(void);
 void* thread_get(void*);
 void* thread_put(void*);
-void* client_interface(void*);
+void print_help(char*);
 
 static unsigned short is_verbose = 0;
 static unsigned sleep_flag = 0;
@@ -29,17 +29,20 @@ static short ip_port = DEFAULT_SERV_PORT;
 
 int main(int argc, char* argv[]) {
 	cmd_t cmd;
+	msg_t msg;
 	int ret = 0;
 	int i = 0;
 	pthread_t* threads = NULL;
 	pthread_attr_t attr;
-	char* message[MAXMSG] = {'\0'};
+	char message[MAXMSG] = {'\0'};
 
 	// Setup the attributes structure to allow starting detached threads.
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
 	memset(&cmd, 0, sizeof(cmd_t));
+	memset(&msg, 0, sizeof(msg_t));
+
 	while((ret = getopt(argc, argv, CLIENT_OPTIONS)) != -1) {
 		switch(ret) {
 		case 'i':
@@ -56,24 +59,27 @@ int main(int argc, char* argv[]) {
 				fprintf(stderr, "atoi: \"%s\" not set", optarg);
 			}
 			break;
-		case 'c':
-			strncpy(cmd.cmd, optarg, CMD_LEN - 1);
-			cmd.cmd[strlen(cmd.cmd)] = '\0';
-			if((strncmp(cmd.cmd, CMD_PUT, strlen(CMD_PUT)) != 0) &&
-					(strncmp(cmd.cmd, CMD_GET, strlen(CMD_GET)) != 0) &&
-					(strncmp(cmd.cmd, CMD_DIR, strlen(CMD_DIR)) != 0)) {
-				fprintf(stderr, "%s is an invalid command.\n", cmd.cmd);
-				exit(EXIT_FAILURE);
-			}
-			break;
-		case 'v':
-			is_verbose++;
-			break;
-		case 'u':
-			sleep_flag += 1000;
-			break;
+
+		/* case 'c': */
+		/* 	strncpy(cmd.cmd, optarg, CMD_LEN - 1); */
+		/* 	cmd.cmd[strlen(cmd.cmd)] = '\0'; */
+		/* 	if((strncmp(cmd.cmd, CMD_PUT, strlen(CMD_PUT)) != 0) && */
+		/* 			(strncmp(cmd.cmd, CMD_GET, strlen(CMD_GET)) != 0) && */
+		/* 			(strncmp(cmd.cmd, CMD_DIR, strlen(CMD_DIR)) != 0)) { */
+		/* 		fprintf(stderr, "%s is an invalid command.\n", cmd.cmd); */
+		/* 		exit(EXIT_FAILURE); */
+		/* 	} */
+		/* 	break; */
+
+		/* case 'v': */
+		/* 	is_verbose++; */
+		/* 	break; */
+		/* case 'u': */
+		/* 	sleep_flag += 1000; */
+		/* 	break; */
+
 		case 'h':
-			fprintf(stdout, "Help message!\n");
+			print_help(argv[0]);
 			exit(EXIT_SUCCESS);
 			break;
 		default:
@@ -88,36 +94,32 @@ int main(int argc, char* argv[]) {
 	ret = 0;
 	for( ; ; ) {
 		if(is_verbose) fprintf(stderr, "Command to server: <%s> %d\n", cmd.cmd, __LINE__);
-
 		fputs("> ", stdout);
-		ret = fgets(message, sizeof(message), stdin);
-		if(ret = NULL) {
+		if(fgets(message, sizeof(message), stdin) == NULL) {
 			fprintf(stderr, "Couldn't read input.");
 			break;
 		}
 		message[strlen(message) - 1] = '\0';
 		if(strlen(message) == 0) {
 			continue;
+		} else if(strcmp(cmd.cmd, CMD_GET) == 0) {
+			// Process the files left on the command line, creating a thread for
+			// each file to connect to the server
+			for(i = optind; i < argc; i++) {
+				pthread_create(&threads[i], &attr, thread_get, argv[i]);
+			}
+		} else if(strcmp(cmd.cmd, CMD_PUT) == 0) {
+			for(i = optind; i < argc; i++) {
+				pthread_create(&threads[i], &attr, thread_put, argv[i]);
+			}
+		} else if(strcmp(cmd.cmd, CMD_DIR) == 0) {
+			list_dir();
+		} else {
+			fprintf(stderr, "ERROR: unknown command >%s< %d\n", cmd.cmd, __LINE__);
+			exit(EXIT_FAILURE);
 		}
-
+		memset(message, 0, sizeof(message));
 	}
-
-    if(strcmp(cmd.cmd, CMD_GET) == 0) {
-        // Process the files left on the command line, creating a thread for
-        // each file to connect to the server
-        for(i = optind; i < argc; i++) {
-			pthread_create(&threads[i], &attr, thread_get, argv[i]);
-        }
-    } else if(strcmp(cmd.cmd, CMD_PUT) == 0) {
-        for(i = optind; i < argc; i++) {
-			pthread_create(&threads[i], &attr, thread_put, argv[i]);
-        }
-    } else if(strcmp(cmd.cmd, CMD_DIR) == 0) {
-        list_dir();
-    } else {
-        fprintf(stderr, "ERROR: unknown command >%s< %d\n", cmd.cmd, __LINE__);
-        exit(EXIT_FAILURE);
-    }
 
 	pthread_attr_destroy(&attr);
     pthread_exit(NULL);
@@ -262,5 +264,9 @@ void list_dir(void) {
 	close(sockfd);
 }
 
-void* client_interface(void*) {
+void print_help(char* prog_name) {
+	printf("\n%s -[%s]\n", prog_name, CLIENT_OPTIONS);
+	printf("\t-i <address>\tSets the server's IP address.\n");
+	printf("\t-p <port>\tSets the server's port.\n");
+	printf("\t-h\t\tDisplays this very message.\n\n");
 }
