@@ -17,9 +17,10 @@
 int get_socket(char*, int);
 void get_file(char*);
 void put_file(char*);
+void list_dir(void);
 void* thread_get(void*);
 void* thread_put(void*);
-void list_dir(void);
+void* client_interface(void*);
 
 static unsigned short is_verbose = 0;
 static unsigned sleep_flag = 0;
@@ -28,14 +29,19 @@ static short ip_port = DEFAULT_SERV_PORT;
 
 int main(int argc, char* argv[]) {
 	cmd_t cmd;
-	int opt = 0;
+	int ret = 0;
 	int i = 0;
 	pthread_t* threads = NULL;
 	pthread_attr_t attr;
+	char* message[MAXMSG] = {'\0'};
+
+	// Setup the attributes structure to allow starting detached threads.
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
 	memset(&cmd, 0, sizeof(cmd_t));
-	while((opt = getopt(argc, argv, CLIENT_OPTIONS)) != -1) {
-		switch(opt) {
+	while((ret = getopt(argc, argv, CLIENT_OPTIONS)) != -1) {
+		switch(ret) {
 		case 'i':
 			if(strlen(optarg) > MAX_ADR_LEN -1) {
 				fprintf(stderr, "%s isn't an IP address. \n", optarg);
@@ -76,14 +82,25 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-    if(is_verbose) fprintf(stderr, "Command to server: <%s> %d\n", cmd.cmd, __LINE__);
-
-	// Setup the attributes structure to allow starting detached threads.
-	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-
 	// TODO Since I'm not using it for anything, init pid_t in the loop rather than setting this thing up.
 	threads = malloc((argc - optind) * sizeof(pthread_t));
+
+	ret = 0;
+	for( ; ; ) {
+		if(is_verbose) fprintf(stderr, "Command to server: <%s> %d\n", cmd.cmd, __LINE__);
+
+		fputs("> ", stdout);
+		ret = fgets(message, sizeof(message), stdin);
+		if(ret = NULL) {
+			fprintf(stderr, "Couldn't read input.");
+			break;
+		}
+		message[strlen(message) - 1] = '\0';
+		if(strlen(message) == 0) {
+			continue;
+		}
+
+	}
 
     if(strcmp(cmd.cmd, CMD_GET) == 0) {
         // Process the files left on the command line, creating a thread for
@@ -123,6 +140,12 @@ int get_socket(char* addr, int port) {
 		exit(EXIT_FAILURE);
 	}
     return(sockfd);
+}
+
+void* thread_get(void* info) {
+    char* file_name = (char* ) info;
+    get_file(file_name);
+    pthread_exit(NULL);
 }
 
 // Get one file.
@@ -166,6 +189,12 @@ void get_file(char* file_name) {
 	}
 	close(fd);
 	close(sockfd);
+}
+
+void* thread_put(void* info) {
+    char* file_name = (char*) info;
+	put_file(file_name);
+    pthread_exit(NULL);
 }
 
 void put_file(char* file_name) {
@@ -233,14 +262,5 @@ void list_dir(void) {
 	close(sockfd);
 }
 
-void* thread_get(void* info) {
-    char* file_name = (char* ) info;
-    get_file(file_name);
-    pthread_exit(NULL);
-}
-
-void* thread_put(void* info) {
-    char* file_name = (char*) info;
-	put_file(file_name);
-    pthread_exit(NULL);
+void* client_interface(void*) {
 }

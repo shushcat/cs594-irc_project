@@ -6,10 +6,12 @@
 - [x] RFC added to repository
 - [x] Setup client & server skeletons
 - [x] Skim RFC
-- [ ] Basic diagram
-- [ ] Associate commands with below functionality
+- [x] Basic diagram
 - [ ] Server process
+	- [x] Setup port in IRC range, 6660--7000
+- [ ] Client command process.
 - [ ] Client can connect to a server
+- [ ] Associate commands with below functionality
 - [ ] Client can create a room
 - [ ] Client can list all rooms
 - [ ] Client can join a room
@@ -58,9 +60,9 @@ channels
 		'#': local join
 		'&': ____
 
-messages
-len(msg) <= 512
-?timeout
+- messages:
+	- [x] len(msg) <= 512
+	- ?timeout
 <prefix> command parameter1 <parameter2, ... , parameter15>
 	prefix:
 		`:prefix`
@@ -72,4 +74,3 @@ len(msg) <= 512
 
 (message: server): numeric reply :: sender, 3 digits, target
 
-ports 6660--6669 & 7000

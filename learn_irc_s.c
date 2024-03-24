@@ -83,6 +83,8 @@ int main(int argc, char* argv[]) {
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); // Host to "network long".
 	servaddr.sin_port = htons(ip_port); // Host to "network short".
 
+	// If the passed port doesn't work, try to connect to one in the usual IRC
+	// range, 6660--7000.
 	while(bind(listenfd, (struct sockaddr*) &servaddr, sizeof(servaddr)) == -1) {
 		if(errno == EADDRINUSE) {
 			if(is_verbose) {
@@ -91,7 +93,7 @@ int main(int argc, char* argv[]) {
 			ip_port++;
 			servaddr.sin_port = htons(ip_port);
 			usleep(1000);
-		} else {
+		} else if((errno != EADDRINUSE) || (ip_port > 7000)) {
 			perror("bind");
 			exit(EXIT_FAILURE);
 		}
