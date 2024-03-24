@@ -147,7 +147,7 @@ int main(int argc, char* argv[]) {
             if(is_verbose) {
 				fprintf(stdout, "Connection from client: <%s>\n", buf);
             }
-		process_connection(sockfd, buf, n);
+			process_connection(sockfd, buf, n);
         }
     }
     printf("Closing listen socket\n");
@@ -171,6 +171,7 @@ void process_connection(int sockfd, void* buf, int n) {
 		fprintf(stderr, "Request from client: <%s> <%s>\n",
 				cmd->cmd, cmd->name);
     }
+
 
     // Lock, then tally a connection.
 	pthread_mutex_lock(&connections_mutex);

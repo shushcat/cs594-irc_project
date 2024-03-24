@@ -7,20 +7,17 @@
 #define NAME_LEN 75
 #define MAX_ADR_LEN 50
 #define MAXLINE 1024
-#define MAXMSG 512
+#define MSG_LEN 512
 
 typedef struct cmd_s {
-    char cmd[CMD_LEN];
+	char* pre;
+    char* cmd;
+	char* msgs;
     char name[NAME_LEN];
     int sock;
 } cmd_t;
 
-// TODO Combine with `cmd_t`?
-typedef struct msg_s {
-	char pref[MAXMSG];
-	char cmd[MAXMSG];
-	char args[MAXMSG];
-} msg_t;
+#define CMD_INIT {NULL, NULL, NULL, {'\0'}, 0};
 
 // IRC commands:
 #define CMD_GET "get"
@@ -38,5 +35,7 @@ typedef struct msg_s {
 #define SERVER_CMD_VMINUS "v-"
 #define SERVER_CMD_HELP "help"
 #define SERVER_CMD_EXIT "exit"
+
+#define CLIENT_CMD_EXIT "exit"
 
 #endif

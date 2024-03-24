@@ -7,9 +7,9 @@
 - [x] Setup client & server skeletons
 - [x] Skim RFC
 - [x] Basic diagram
-- [ ] Server process
+- [x] Server process
 	- [x] Setup port in IRC range, 6660--7000
-- [ ] Client command process.
+- [x] Client command process.
 - [ ] Client can connect to a server
 - [ ] Associate commands with below functionality
 - [ ] Client can create a room

@@ -17,10 +17,11 @@
 int get_socket(char*, int);
 void get_file(char*);
 void put_file(char*);
-void list_dir(void);
+void list_dir(cmd_t*);
 void* thread_get(void*);
 void* thread_put(void*);
 void print_help(char*);
+void build_command(char*, cmd_t*);
 
 static unsigned short is_verbose = 0;
 static unsigned sleep_flag = 0;
@@ -29,19 +30,17 @@ static short ip_port = DEFAULT_SERV_PORT;
 
 int main(int argc, char* argv[]) {
 	cmd_t cmd;
-	msg_t msg;
 	int ret = 0;
-	int i = 0;
+	/* int i = 0; */
 	pthread_t* threads = NULL;
 	pthread_attr_t attr;
-	char message[MAXMSG] = {'\0'};
+	char message_input[MSG_LEN] = {'\0'};
 
 	// Setup the attributes structure to allow starting detached threads.
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
 	memset(&cmd, 0, sizeof(cmd_t));
-	memset(&msg, 0, sizeof(msg_t));
 
 	while((ret = getopt(argc, argv, CLIENT_OPTIONS)) != -1) {
 		switch(ret) {
@@ -95,30 +94,31 @@ int main(int argc, char* argv[]) {
 	for( ; ; ) {
 		if(is_verbose) fprintf(stderr, "Command to server: <%s> %d\n", cmd.cmd, __LINE__);
 		fputs("> ", stdout);
-		if(fgets(message, sizeof(message), stdin) == NULL) {
+		if(fgets(message_input, sizeof(message_input), stdin) == NULL) {
 			fprintf(stderr, "Couldn't read input.");
 			break;
 		}
-		message[strlen(message) - 1] = '\0';
-		if(strlen(message) == 0) {
+		message_input[strlen(message_input) - 1] = '\0';
+		build_command(&(message_input[0]), &cmd);
+		if(strlen(message_input) == 0) {
 			continue;
-		} else if(strcmp(cmd.cmd, CMD_GET) == 0) {
+		/* } else if(strcmp(cmd.cmd, CMD_GET) == 0) { */
 			// Process the files left on the command line, creating a thread for
 			// each file to connect to the server
-			for(i = optind; i < argc; i++) {
-				pthread_create(&threads[i], &attr, thread_get, argv[i]);
-			}
-		} else if(strcmp(cmd.cmd, CMD_PUT) == 0) {
-			for(i = optind; i < argc; i++) {
-				pthread_create(&threads[i], &attr, thread_put, argv[i]);
-			}
+			/* for(i = optind; i < argc; i++) { */
+				/* pthread_create(&threads[i], &attr, thread_get, argv[i]); */
+			/* } */
+		/* } else if(strcmp(cmd.cmd, CMD_PUT) == 0) { */
+			/* for(i = optind; i < argc; i++) { */
+				/* pthread_create(&threads[i], &attr, thread_put, argv[i]); */
+			/* } */
 		} else if(strcmp(cmd.cmd, CMD_DIR) == 0) {
-			list_dir();
+			list_dir(&cmd);
 		} else {
 			fprintf(stderr, "ERROR: unknown command >%s< %d\n", cmd.cmd, __LINE__);
 			exit(EXIT_FAILURE);
 		}
-		memset(message, 0, sizeof(message));
+		memset(message_input, 0, sizeof(message_input));
 	}
 
 	pthread_attr_destroy(&attr);
@@ -157,6 +157,7 @@ void get_file(char* file_name) {
     int fd = 0;
     ssize_t bytes_read = 0;
     char buffer[MAXLINE] = {'\0'};
+	memset(&cmd, 0, sizeof(cmd_t));
     strncpy(cmd.cmd, CMD_GET, CMD_LEN);
 	strncpy(cmd.name, file_name, NAME_LEN);
 	if(is_verbose > 2) {
@@ -207,6 +208,7 @@ void put_file(char* file_name) {
 	ssize_t bytes_written = 0;
 	ssize_t total_bytes_written = 0;
     char buffer[MAXLINE] = {'\0'};
+	memset(&cmd, 0, sizeof(cmd_t));
 	strncpy(cmd.cmd, CMD_PUT, CMD_LEN);
 	strncpy(cmd.name, file_name, NAME_LEN);
 	if(is_verbose > 2) {
@@ -243,16 +245,18 @@ void put_file(char* file_name) {
 	close(sockfd);
 }
 
-void list_dir(void) {
-    cmd_t cmd;
+void list_dir(cmd_t* cmd) {
     int sockfd = 0;
     ssize_t bytes_read = 0;
     char buffer[MAXLINE] = {'\0'};
+    /* cmd_t cmd = CMD_INIT; */
 	if(is_verbose > 2) fprintf(stderr, "%d: %d, %ld, %s\n", __LINE__, sockfd, bytes_read, buffer);
     sockfd = get_socket(ip_addr, ip_port);
-    strcpy(cmd.cmd, CMD_DIR);
-    printf("dir from server: %s \n", cmd.cmd);
-	write(sockfd, cmd.cmd, sizeof(cmd.cmd) - 1);
+	/* memset(&cmd, 0, sizeof(cmd_t)); */
+    strcpy(cmd->cmd, CMD_DIR);
+    printf("dir from server: %s \n", cmd->cmd);
+	/* write(sockfd, cmd->cmd, sizeof(cmd->cmd) - 1); */
+	write(sockfd, (void*) cmd, sizeof(*cmd) - 1);
 	while((bytes_read = read(sockfd, buffer, sizeof(buffer))) != 0) {
 		if(bytes_read == -1) {
 			perror("read");
@@ -269,4 +273,15 @@ void print_help(char* prog_name) {
 	printf("\t-i <address>\tSets the server's IP address.\n");
 	printf("\t-p <port>\tSets the server's port.\n");
 	printf("\t-h\t\tDisplays this very message.\n\n");
+}
+
+void build_command(char* message_input, cmd_t* cmd) {
+	if(message_input[0] == ':') {
+		cmd->pre = strtok(message_input, " ");
+		cmd->cmd = strtok(NULL, " ");
+		cmd->msgs = strtok(NULL, " ");
+	} else {
+		cmd->cmd = strtok(message_input, " ");
+		cmd->msgs = strtok(NULL, " ");
+	}
 }
