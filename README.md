@@ -9,9 +9,12 @@
 - [x] Basic diagram
 - [x] Server process
 	- [x] Setup port in IRC range, 6660--7000
-- [x] Client command process.
-- [ ] Client can connect to a server
-- [ ] Associate commands with below functionality
+- [ ] Client
+	- [x] Connect to server
+	- [x] Run command input loop
+	- [x] Client command process.
+	- [x] `/quit`
+- [ ] Pick needed IRC commands
 - [ ] Client can create a room
 - [ ] Client can list all rooms
 - [ ] Client can join a room
@@ -30,6 +33,7 @@
 - [ ] Secure messaging
 - [ ] File transfer
 	- DCC transfers?
+	- Combine `get` and `put` with server as relay?
 - [ ] Cloud connected server
 
 ## Questions

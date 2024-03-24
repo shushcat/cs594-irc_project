@@ -27,6 +27,8 @@ typedef struct cmd_s {
 #define CMD_PUT "put"
 #define CMD_DIR "dir"
 
+#define CMD_QUIT "/quit"
+
 #define CLIENT_OPTIONS "i:p:hv"
 
 #define SERVER_OPTIONS "p:uvh"

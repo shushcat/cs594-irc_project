@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
     int listenfd = 0;
     int sockfd = 0;
     int n;
-    char buf[MAXLINE];
+    char buf[sizeof(cmd_t)];
     socklen_t clilen;
     struct sockaddr_in cliaddr;
     struct sockaddr_in servaddr;
@@ -51,6 +51,7 @@ int main(int argc, char* argv[]) {
 			if(ip_port == 0) {
 				fprintf(stderr, "atoi: \"%s\" just isn't a very good port number.\n", optarg);
 			}
+
             break;
         case 'u':
 			sleep_flag += 1000;

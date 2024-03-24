@@ -31,7 +31,6 @@ static short ip_port = DEFAULT_SERV_PORT;
 int main(int argc, char* argv[]) {
 	cmd_t cmd;
 	int ret = 0;
-	/* int i = 0; */
 	pthread_t* threads = NULL;
 	pthread_attr_t attr;
 	char message_input[MSG_LEN] = {'\0'};
@@ -87,11 +86,9 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	// TODO Since I'm not using it for anything, init pid_t in the loop rather than setting this thing up.
-	threads = malloc((argc - optind) * sizeof(pthread_t));
-
 	ret = 0;
 	for( ; ; ) {
+		/* pthread_t tid; // This gets passed to `pthread_create()` calls. */
 		if(is_verbose) fprintf(stderr, "Command to server: <%s> %d\n", cmd.cmd, __LINE__);
 		fputs("> ", stdout);
 		if(fgets(message_input, sizeof(message_input), stdin) == NULL) {
@@ -116,6 +113,9 @@ int main(int argc, char* argv[]) {
 		} else if(strcmp(cmd.cmd, CMD_DIR) == 0) {
 			LOG;
 			list_dir(&cmd);
+		} else if(strcmp(cmd.cmd, CMD_QUIT) == 0) {
+			fprintf(stdout, "Quitting....\n");
+			break;
 		} else {
 			fprintf(stderr, "ERROR: unknown command >%s< %d\n", cmd.cmd, __LINE__);
 			exit(EXIT_FAILURE);
@@ -247,17 +247,14 @@ void put_file(char* file_name) {
 	close(sockfd);
 }
 
-void list_dir(cmd_t* cmd) {
+void list_dir(cmd_t* cmd_p) {
     int sockfd = 0;
     ssize_t bytes_read = 0;
     char buffer[MAXLINE] = {'\0'};
 	if(is_verbose > 2) fprintf(stderr, "%d: %d, %ld, %s\n", __LINE__, sockfd, bytes_read, buffer);
     sockfd = get_socket(ip_addr, ip_port);
-	/* memset(&cmd, 0, sizeof(cmd_t)); */
-    /* strcpy(cmd->cmd, CMD_DIR); */
-    printf("dir from server: %s \n", cmd->cmd);
-	/* write(sockfd, cmd->cmd, sizeof(cmd->cmd) - 1); */
-	write(sockfd, cmd, sizeof(*cmd) - 1);
+    printf("dir from server: %s \n", cmd_p->cmd);
+	write(sockfd, cmd_p, sizeof(*cmd_p) - 1);
 	while((bytes_read = read(sockfd, buffer, sizeof(buffer))) != 0) {
 		if(bytes_read == -1) {
 			perror("read");
