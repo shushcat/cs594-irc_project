@@ -10,21 +10,24 @@
 #define MSG_LEN 512
 
 typedef struct cmd_s {
-	char* pre;
-    char* cmd;
-	char* msgs;
+	char pre[MSG_LEN];
+    char cmd[MSG_LEN];
+	char msg[MSG_LEN];
     char name[NAME_LEN];
     int sock;
 } cmd_t;
 
-#define CMD_INIT {NULL, NULL, NULL, {'\0'}, 0};
+#define INIT_CMD {NULL, NULL, NULL, {'\0'}, 0};
+
+#define LOG if(is_verbose>2) fprintf(stderr, "%s %s %d\n", \
+		__FILE__, __func__, __LINE__);
 
 // IRC commands:
 #define CMD_GET "get"
 #define CMD_PUT "put"
 #define CMD_DIR "dir"
 
-#define CLIENT_OPTIONS "i:p:h"
+#define CLIENT_OPTIONS "i:p:hv"
 
 #define SERVER_OPTIONS "p:uvh"
 

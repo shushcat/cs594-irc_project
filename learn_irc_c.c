@@ -70,9 +70,9 @@ int main(int argc, char* argv[]) {
 		/* 	} */
 		/* 	break; */
 
-		/* case 'v': */
-		/* 	is_verbose++; */
-		/* 	break; */
+		case 'v':
+			is_verbose++;
+			break;
 		/* case 'u': */
 		/* 	sleep_flag += 1000; */
 		/* 	break; */
@@ -100,6 +100,7 @@ int main(int argc, char* argv[]) {
 		}
 		message_input[strlen(message_input) - 1] = '\0';
 		build_command(&(message_input[0]), &cmd);
+		LOG;
 		if(strlen(message_input) == 0) {
 			continue;
 		/* } else if(strcmp(cmd.cmd, CMD_GET) == 0) { */
@@ -113,6 +114,7 @@ int main(int argc, char* argv[]) {
 				/* pthread_create(&threads[i], &attr, thread_put, argv[i]); */
 			/* } */
 		} else if(strcmp(cmd.cmd, CMD_DIR) == 0) {
+			LOG;
 			list_dir(&cmd);
 		} else {
 			fprintf(stderr, "ERROR: unknown command >%s< %d\n", cmd.cmd, __LINE__);
@@ -249,14 +251,13 @@ void list_dir(cmd_t* cmd) {
     int sockfd = 0;
     ssize_t bytes_read = 0;
     char buffer[MAXLINE] = {'\0'};
-    /* cmd_t cmd = CMD_INIT; */
 	if(is_verbose > 2) fprintf(stderr, "%d: %d, %ld, %s\n", __LINE__, sockfd, bytes_read, buffer);
     sockfd = get_socket(ip_addr, ip_port);
 	/* memset(&cmd, 0, sizeof(cmd_t)); */
-    strcpy(cmd->cmd, CMD_DIR);
+    /* strcpy(cmd->cmd, CMD_DIR); */
     printf("dir from server: %s \n", cmd->cmd);
 	/* write(sockfd, cmd->cmd, sizeof(cmd->cmd) - 1); */
-	write(sockfd, (void*) cmd, sizeof(*cmd) - 1);
+	write(sockfd, cmd, sizeof(*cmd) - 1);
 	while((bytes_read = read(sockfd, buffer, sizeof(buffer))) != 0) {
 		if(bytes_read == -1) {
 			perror("read");
@@ -273,15 +274,23 @@ void print_help(char* prog_name) {
 	printf("\t-i <address>\tSets the server's IP address.\n");
 	printf("\t-p <port>\tSets the server's port.\n");
 	printf("\t-h\t\tDisplays this very message.\n\n");
+	printf("\t-v\t\tIncrease verbosity for each occurrence.\n\n");
 }
 
 void build_command(char* message_input, cmd_t* cmd) {
-	if(message_input[0] == ':') {
-		cmd->pre = strtok(message_input, " ");
-		cmd->cmd = strtok(NULL, " ");
-		cmd->msgs = strtok(NULL, " ");
+	char* tok = NULL;
+	tok = strtok(message_input, " ");
+	LOG;
+	if(tok[0] == ':') {
+		LOG;
+		strcpy(cmd->pre, tok);
+		tok = strtok(NULL, " ");
+		if(tok) strcpy(cmd->cmd, tok);
 	} else {
-		cmd->cmd = strtok(message_input, " ");
-		cmd->msgs = strtok(NULL, " ");
+		LOG;
+		strcpy(cmd->cmd, tok);
 	}
+	LOG;
+	tok = strtok(NULL, " ");
+	if(tok) strcpy(cmd->msg, tok);
 }
